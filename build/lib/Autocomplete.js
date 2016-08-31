@@ -19,6 +19,7 @@ var Autocomplete = React.createClass({
     value: React.PropTypes.any,
     onChange: React.PropTypes.func,
     onSelect: React.PropTypes.func,
+    onInit:React.PropTypes.func,
     shouldItemRender: React.PropTypes.func,
     sortItems: React.PropTypes.func,
     getItemValue: React.PropTypes.func.isRequired,
@@ -165,6 +166,7 @@ var Autocomplete = React.createClass({
         return;
       } else if (this.state.highlightedIndex == null) {
         // input has focus but no menu item is selected + enter is hit -> close the menu, highlight whatever's in input
+        return ;
         this.setState({
           isOpen: false
         }, function () {
@@ -290,13 +292,14 @@ var Autocomplete = React.createClass({
 
   handleInputBlur: function handleInputBlur() {
     if (this._ignoreBlur) return;
+    this.props.onInit();
     this.setState({
       isOpen: false,
       highlightedIndex: null
     });
   },
 
-  handleInputFocus: function handleInputFocus() {
+  handleInputFocus: function handleInputFocus(event) {
     if (this._ignoreBlur) {
       this.setIgnoreBlur(false);
       return;
@@ -314,8 +317,9 @@ var Autocomplete = React.createClass({
     return el.ownerDocument && el === el.ownerDocument.activeElement;
   },
 
-  handleInputClick: function handleInputClick() {
+  handleInputClick: function handleInputClick(event) {
     // Input will not be focused if it's disabled
+    this.props.onChange(event, event.target.value);
     if (this.isInputFocused() && this.state.isOpen === false) this.setState({ isOpen: true });else if (this.state.highlightedIndex !== null && !this._ignoreClick) this.selectItemFromMouse(this.getFilteredItems()[this.state.highlightedIndex]);
     this._ignoreClick = false;
   },
@@ -339,8 +343,12 @@ var Autocomplete = React.createClass({
         'aria-autocomplete': 'list',
         autoComplete: 'off',
         ref: 'input',
-        onFocus: this.handleInputFocus,
-        onBlur: this.handleInputBlur,
+        onFocus: function(event){
+          return _this5.handleInputFocus(event);
+        },
+        onBlur: function(event){
+         return _this5.handleInputBlur(event);
+        },
         onChange: function (event) {
           return _this5.handleChange(event);
         },
@@ -350,7 +358,9 @@ var Autocomplete = React.createClass({
         onKeyUp: function (event) {
           return _this5.handleKeyUp(event);
         },
-        onClick: this.handleInputClick,
+        onClick: function(event){
+          return _this5.handleInputClick(event);
+        },
         value: this.props.value
       })),
       this.state.isOpen && this.renderMenu(),
